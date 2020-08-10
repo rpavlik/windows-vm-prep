@@ -145,6 +145,7 @@ if __name__ == "__main__":
 
     calls.append(wrapPowershellForCmd('& .\\' + VS_PS))
 
+    # Configure git appropriately
+    calls.append("call other-scripts\\do-gitconfig.cmd\n")
     with open(OVERALL_BATCH, 'w') as fp:
-        fp.writelines(ECHO_OFF)
         fp.writelines('\n'.join(calls))

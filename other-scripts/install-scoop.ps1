@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: BSL-1.0
 $env:SCOOP='w:\scoop'
 [environment]::setEnvironmentVariable('SCOOP',$env:SCOOP,'User')
-iwr -useb get.scoop.sh | iex
+Invoke-WebRequest -useb get.scoop.sh | Invoke-Expression
 
 scoop update
-scoop install ninja ripgrep
+scoop install ninja ripgrep curl 7zip
