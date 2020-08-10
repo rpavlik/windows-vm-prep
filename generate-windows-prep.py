@@ -95,7 +95,11 @@ OVERALL_BATCH = 'install-all.cmd'
 if __name__ == "__main__":
     print("@echo off")
 
-    calls = [ECHO_OFF]
+    calls = [
+        ECHO_OFF,
+        # Install scoop, set execution policy to remotesigned for this user.
+        "call other-scripts\\enable-ps-and-install-scoop.cmd\n"
+    ]
 
     # Install packages using winget
     print(getWingetCommands())
@@ -126,7 +130,8 @@ if __name__ == "__main__":
 
         # Install additional components in visual studio
         print()
-        fp.write('echo "Now modifying Visual Studio to include all desired components"\n')
+        fp.write(
+            'echo "Now modifying Visual Studio to include all desired components"\n')
         args = ['modify']
         args.extend(VS_INSTALLER_BASE_CMD_ARGS)
         # The chain.from_iterable is so that we can add two items to the list
