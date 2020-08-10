@@ -2,6 +2,8 @@
 # Copyright 2020, Collabora, Ltd.
 # SPDX-License-Identifier: BSL-1.0
 
+from itertools import chain
+
 WINGET_PACKAGES = (
     "git",
     "python",
@@ -37,14 +39,19 @@ VS_INSTALLER_BASE_CMD_ARGS = [
 ]
 
 VSCODE_EXTENSIONS = (
+    'coenraads.bracket-pair-colorizer',
+    'editorconfig.editorconfig',
+    'kevinkyang.auto-comment-blocks',
+    'marvhen.reflow-markdown',
+    'ms-python.python',
+    'ms-vscode-remote.remote-wsl',
     'ms-vscode.cmake-tools',
     'ms-vscode.cpptools',
-    'ms-python.python',
+    'ms-vscode.powershell',
+    'twxs.cmake',
+    'vscode-icons-team.vscode-icons',
     'yzhang.markdown-all-in-one',
     'ziyasal.vscode-open-in-github',
-    'vscode-icons-team.vscode-icons',
-    'marvhen.reflow-markdown',
-    'twxs.cmake',
 )
 
 
@@ -66,7 +73,7 @@ def makeStartProcess(cmd, args):
 def wrapPowershellForCmd(ps_command):
     """Wrap a powershell command for invocation from cmd."""
     # We're technically escaping for cmd here.
-    return "powershell -executionpolicy remotesigned -command '{}'".format(ps_command.replace("'", r"\'"))
+    return 'powershell -executionpolicy remotesigned -command "{}"'.format(ps_command.replace('"', r'\"'))
 
 
 def getWingetCommands():
@@ -77,24 +84,25 @@ def getWingetCommands():
             r"if %ERRORLEVEL% EQU 0 Echo {} installed successfully. ".format(pkg))
     return '\n'.join(lines)
 
+
 ECHO_OFF = "@echo off\n"
 WINGET_BATCH = 'winget-packages.cmd'
 VSCODE_BATCH = 'vscode-extensions.cmd'
-VS_BATCH = 'vs-update-modify.cmd'
+VS_PS = 'vs-update-modify.ps1'
 
 OVERALL_BATCH = 'install-all.cmd'
 
 if __name__ == "__main__":
     print("@echo off")
 
-    calls = [ ECHO_OFF ]
+    calls = [ECHO_OFF]
 
     # Install packages using winget
     print(getWingetCommands())
     with open(WINGET_BATCH, 'w') as fp:
         fp.writelines(ECHO_OFF)
         fp.writelines(getWingetCommands())
-    calls.append('call '+ WINGET_BATCH)
+    calls.append('call ' + WINGET_BATCH)
 
     # Install vscode extensions
     print()
@@ -105,28 +113,30 @@ if __name__ == "__main__":
         fp.writelines(ECHO_OFF)
         fp.writelines(cmd)
         fp.write('\n')
-    calls.append('call '+ VSCODE_BATCH)
+    calls.append('call ' + VSCODE_BATCH)
 
-
-    with open(VS_BATCH, 'w') as fp:
-        fp.writelines(ECHO_OFF)
+    with open(VS_PS, 'w') as fp:
         # Update visual studio
         print()
         args = ['update']
         args.extend(VS_INSTALLER_BASE_CMD_ARGS)
-        fp.writelines(wrapPowershellForCmd(makeStartProcess(VS_INSTALLER, args)))
+        fp.writelines(makeStartProcess(VS_INSTALLER, args))
         fp.write('\n')
 
         # Install additional components in visual studio
         print()
         args = ['modify']
         args.extend(VS_INSTALLER_BASE_CMD_ARGS)
-        args.extend("--add {};includeRecommended".format(x) for x in VS_WORKLOADS)
-        args.extend("--add {}".format(x) for x in VS_COMPONENTS)
-        fp.writelines(wrapPowershellForCmd(makeStartProcess(VS_INSTALLER, args)))
+        # The chain.from_iterable is so that we can add two items to the list
+        # for each single item in the original list and thus the comprehension
+        args.extend(chain.from_iterable(("--add", "{};includeRecommended".format(x))
+                                        for x in VS_WORKLOADS))
+        args.extend(chain.from_iterable(("--add", x) for x in VS_COMPONENTS))
+        fp.writelines(makeStartProcess(VS_INSTALLER, args))
         fp.write('\n')
 
-    calls.append('call ' + VS_BATCH)
+    calls.append(wrapPowershellForCmd('& .\\' + VS_PS))
+
     with open(OVERALL_BATCH, 'w') as fp:
         fp.writelines(ECHO_OFF)
         fp.writelines('\n'.join(calls))

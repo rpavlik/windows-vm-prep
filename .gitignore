@@ -2,8 +2,9 @@
 # SPDX-FileCopyrightText: 2020, Collabora, Ltd.
 # SPDX-FileCopyrightText: 2020, GitHub
 
-# Generated batch files
+# Generated files
 *.cmd
+*.ps1
 
 
 ## Below here is the "default" provided by GitHub for python projects.
