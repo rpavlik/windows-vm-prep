@@ -118,6 +118,7 @@ if __name__ == "__main__":
     with open(VS_PS, 'w') as fp:
         # Update visual studio
         print()
+        fp.write('echo "Now updating Visual Studio"\n')
         args = ['update']
         args.extend(VS_INSTALLER_BASE_CMD_ARGS)
         fp.writelines(makeStartProcess(VS_INSTALLER, args))
@@ -125,6 +126,7 @@ if __name__ == "__main__":
 
         # Install additional components in visual studio
         print()
+        fp.write('echo "Now modifying Visual Studio to include all desired components"\n')
         args = ['modify']
         args.extend(VS_INSTALLER_BASE_CMD_ARGS)
         # The chain.from_iterable is so that we can add two items to the list
@@ -134,6 +136,7 @@ if __name__ == "__main__":
         args.extend(chain.from_iterable(("--add", x) for x in VS_COMPONENTS))
         fp.writelines(makeStartProcess(VS_INSTALLER, args))
         fp.write('\n')
+        fp.write('echo "Done messing with Visual Studio"\n')
 
     calls.append(wrapPowershellForCmd('& .\\' + VS_PS))
 
